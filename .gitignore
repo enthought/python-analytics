@@ -1,3 +1,6 @@
 *~
 *.pyc
 /.coverage
+/.tox/
+/python_analytics.egg-info/
+/python_analytics/_version.py
