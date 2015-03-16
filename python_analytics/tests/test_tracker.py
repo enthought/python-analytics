@@ -2,7 +2,10 @@ from __future__ import absolute_import, unicode_literals
 
 import unittest
 
-from ..tracker import CustomDimension, CustomMetric, Event
+import requests
+
+from ..tracker import _AnalyticsHandler, CustomDimension, CustomMetric, Event
+from ..utils import get_user_agent
 
 
 class TestCustomFields(unittest.TestCase):
@@ -171,3 +174,27 @@ class TestEvent(unittest.TestCase):
 
         # Then
         self.assertEqual(event_dict, expected)
+
+
+class TestAnalyticsHandler(unittest.TestCase):
+
+    def test_default_user_agent(self):
+        # Given
+        handler = _AnalyticsHandler()
+
+        # Then
+        user_agent = handler._session.headers['User-Agent']
+        self.assertRegexpMatches(user_agent, r'^python-analytics/')
+        self.assertEqual(user_agent, get_user_agent(None))
+
+    def test_override_user_agent(self):
+        # Given
+        session = requests.Session()
+        session.headers['User-Agent'] = 'MyAgent/1.0'
+        handler = _AnalyticsHandler(session=session)
+
+        # Then
+        user_agent = handler._session.headers['User-Agent']
+        self.assertRegexpMatches(
+            user_agent, r'^python-analytics/[^ ]+ MyAgent/1.0')
+        self.assertEqual(user_agent, get_user_agent('MyAgent/1.0'))
