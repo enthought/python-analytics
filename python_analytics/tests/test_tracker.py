@@ -9,8 +9,8 @@ import requests
 import responses
 from six.moves.urllib import parse
 
-from ..tracker import (
-    _AnalyticsHandler, CustomDimension, CustomMetric, Event, Tracker)
+from ..events import CustomDimension, CustomMetric, Event
+from ..tracker import _AnalyticsHandler, Tracker
 from ..utils import get_user_agent
 
 
