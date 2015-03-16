@@ -5,6 +5,7 @@ import uuid
 
 from six.moves.urllib import parse
 
+from .event_encoder import TrackedAttribute, EventEncoder
 from .utils import get_user_agent
 
 
@@ -27,17 +28,19 @@ class _AnalyticsHandler(object):
         response.raise_for_status()
 
 
-class Tracker(object):
+class Tracker(object, metaclass=EventEncoder):
+
+    version = TrackedAttribute('v', int)
+    tracking_id = TrackedAttribute('tid', str)
+    client_id = TrackedAttribute('cid', str)
 
     def __init__(self, tracking_id, requests_session=None):
         self._handler = _AnalyticsHandler(session=requests_session)
+        self.version = 1
         self.tracking_id = tracking_id
+        self.client_id = str(uuid.uuid4())
 
     def send(self, event):
-        data = {
-            'v': 1,
-            'tid': self.tracking_id,
-            'cid': str(uuid.uuid4()),
-        }
+        data = self.to_dict()
         data.update(event.to_dict())
         self._handler.send(data)

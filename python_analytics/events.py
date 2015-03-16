@@ -1,5 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 
+from .event_encoder import TrackedAttribute, EventEncoder
+
 
 class _CustomField(object):
 
@@ -28,14 +30,23 @@ class CustomMetric(_CustomField):
     FORMAT = 'cm{:d}'
 
 
-class Event(object):
+class Event(object, metaclass=EventEncoder):
+
+    hit = TrackedAttribute('t', str)
+    category = TrackedAttribute('ec', str)
+    action = TrackedAttribute('ea', str)
+    label = TrackedAttribute('el', str, required=False)
+    value = TrackedAttribute('ev', int, required=False)
 
     def __init__(self, category, action, label=None, value=None,
                  custom_dimensions=None, custom_metrics=None):
+        self.hit = 'event'
         self.category = category
         self.action = action
-        self.label = label
-        self.value = value
+        if label is not None:
+            self.label = label
+        if value is not None:
+            self.value = value
 
         if custom_dimensions is None:
             custom_dimensions = ()
@@ -51,15 +62,7 @@ class Event(object):
         self._metrics = custom_metrics
 
     def to_dict(self):
-        value = {
-            't': 'event',
-            'ec': self.category,
-            'ea': self.action,
-        }
-        if self.label is not None:
-            value['el'] = self.label
-        if self.value is not None:
-            value['ev'] = self.value
+        value = super(Event, self).to_dict()
         for dimension in self._dimensions:
             value[dimension.key] = dimension.value
         for metric in self._metrics:
