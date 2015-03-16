@@ -22,7 +22,7 @@ class _AnalyticsHandler(object):
         self._session = session
 
     def send(self, data):
-        encoded_data = parse.urlencode(data)
+        encoded_data = parse.urlencode(data, encoding='utf-8')
         self._session.post(self.target, data=encoded_data)
 
 
