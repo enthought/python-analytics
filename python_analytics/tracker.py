@@ -23,7 +23,7 @@ class _AnalyticsHandler(object):
 
     def send(self, data):
         encoded_data = parse.urlencode(data)
-        self.session.post(self.target, data=encoded_data)
+        self._session.post(self.target, data=encoded_data)
 
 
 class Tracker(object):
