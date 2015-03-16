@@ -3,11 +3,14 @@ from __future__ import absolute_import, unicode_literals
 import unittest
 import uuid
 
+from mock import patch
+
 import requests
 import responses
 from six.moves.urllib import parse
 
-from ..tracker import _AnalyticsHandler, CustomDimension, CustomMetric, Event
+from ..tracker import (
+    _AnalyticsHandler, CustomDimension, CustomMetric, Event, Tracker)
 from ..utils import get_user_agent
 
 
@@ -226,6 +229,45 @@ class TestAnalyticsHandler(unittest.TestCase):
 
         # When
         handler.send(data)
+
+        # Then
+        self.assertEqual(len(responses.calls), 1)
+        call, = responses.calls
+        request, response = call
+        sent_data = parse.parse_qs(request.body)
+        self.assertEqual(sent_data, expected)
+
+
+class TestTracker(unittest.TestCase):
+    maxDiff = None
+
+    @patch('uuid.uuid4')
+    @responses.activate
+    def test_tracker(self, uuid4):
+        # Given
+        responses.add(
+            responses.POST,
+            _AnalyticsHandler.target,
+            status=200,
+        )
+
+        my_uuid = 'my-uuid'
+        uuid4.return_value = my_uuid
+        category = 'category'
+        action = 'action'
+        tracker = Tracker('GA-ID')
+        event = Event(category, action)
+        expected = {
+            'v': ['1'],
+            'tid': ['GA-ID'],
+            'cid': [my_uuid],
+            't': ['event'],
+            'ec': [category],
+            'ea': [action],
+        }
+
+        # When
+        tracker.send(event)
 
         # Then
         self.assertEqual(len(responses.calls), 1)

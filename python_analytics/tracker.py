@@ -30,6 +30,7 @@ class Tracker(object):
 
     def __init__(self, tracking_id, requests_session=None):
         self._handler = _AnalyticsHandler(session=requests_session)
+        self.tracking_id = tracking_id
 
     def send(self, obj):
         data = {
