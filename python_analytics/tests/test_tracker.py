@@ -2,7 +2,7 @@ from __future__ import absolute_import, unicode_literals
 
 import unittest
 
-from ..tracker import CustomDimension, CustomMetric
+from ..tracker import CustomDimension, CustomMetric, Event
 
 
 class TestCustomFields(unittest.TestCase):
@@ -36,3 +36,86 @@ class TestCustomFields(unittest.TestCase):
         # Then
         self.assertEqual(dimension.key, 'cm2')
         self.assertEqual(dimension.value, 'eight')
+
+
+class TestEvent(unittest.TestCase):
+
+    def test_event_no_label_value(self):
+        # Given
+        category = 'category'
+        action = 'action'
+        event = Event(
+            category=category, action=action)
+        expected = {
+            't': 'event',
+            'ec': category,
+            'ea': action,
+        }
+
+        # When
+        event_dict = event.to_dict()
+
+        # Then
+        self.assertEqual(event_dict, expected)
+
+    def test_event_label_no_value(self):
+        # Given
+        category = 'category'
+        action = 'action'
+        label = 'an-event-label'
+        event = Event(
+            category=category, action=action, label=label)
+        expected = {
+            't': 'event',
+            'ec': category,
+            'ea': action,
+            'el': label,
+        }
+
+        # When
+        event_dict = event.to_dict()
+
+        # Then
+        self.assertEqual(event_dict, expected)
+
+    def test_event_value_no_label(self):
+        # Given
+        category = 'category'
+        action = 'action'
+        value = 42
+        event = Event(
+            category=category, action=action, value=value)
+        expected = {
+            't': 'event',
+            'ec': category,
+            'ea': action,
+            'ev': value,
+        }
+
+        # When
+        event_dict = event.to_dict()
+
+        # Then
+        self.assertEqual(event_dict, expected)
+
+    def test_event_label_value(self):
+        # Given
+        category = 'category'
+        action = 'action'
+        label = 'Another event!'
+        value = 42
+        event = Event(
+            category=category, action=action, label=label, value=value)
+        expected = {
+            't': 'event',
+            'ec': category,
+            'ea': action,
+            'el': label,
+            'ev': value,
+        }
+
+        # When
+        event_dict = event.to_dict()
+
+        # Then
+        self.assertEqual(event_dict, expected)
