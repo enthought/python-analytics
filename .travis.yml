@@ -1,0 +1,15 @@
+language: python
+
+sudo: false
+
+python:
+  - 3.3
+  - 3.4
+
+install:
+  - pip install -r dev_requirements.txt
+  - pip install .
+
+script:
+  - coverage run -m haas
+  - coverage report -m
