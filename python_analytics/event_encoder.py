@@ -18,8 +18,9 @@ class BaseParameter(object):
         self._data = WeakKeyDictionary()
 
     def __get__(self, instance, owner):
-        value = self._get_value(instance, owner)
-        return self._format(value)
+        if instance is None:
+            return self
+        return self._get_value(instance, owner)
 
     def __set__(self, instance, value):
         if self._type is not None and not isinstance(value, self._type):
@@ -38,7 +39,7 @@ class BaseParameter(object):
         return value
 
     @abstractmethod
-    def _format(self, value):
+    def format(self, value):
         """Format the key and value for Google Analytics.
 
         """
@@ -50,9 +51,7 @@ class Parameter(BaseParameter):
         super(Parameter, self).__init__(type_, required)
         self._target_name = target_name
 
-    def _format(self, value):
-        if value is NoValue:
-            return None
+    def format(self, value):
         return (self._target_name, value)
 
 
@@ -65,9 +64,7 @@ class _CustomParameter(BaseParameter):
         super(_CustomParameter, self).__init__(self.TYPE, required)
         self._index = index
 
-    def _format(self, value):
-        if value is NoValue:
-            return None
+    def format(self, value):
         return (self.FORMAT.format(self._index), value)
 
 
@@ -97,9 +94,10 @@ class Encoder(object):
         encoded = {}
         for attribute_name in self._tracked_attributes:
             item = getattr(self, attribute_name)
-            if item is None:
+            if item is NoValue:
                 continue
-            key, value = item
+            formatter = getattr(type(self), attribute_name)
+            key, value = formatter.format(item)
             encoded[key] = value
         return encoded
 

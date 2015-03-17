@@ -5,7 +5,7 @@ import unittest
 from six import add_metaclass, text_type
 
 from ..event_encoder import (
-    CustomDimension, CustomMetric, Encoder, EventEncoder, Parameter)
+    CustomDimension, CustomMetric, Encoder, EventEncoder, NoValue, Parameter)
 
 
 @add_metaclass(EventEncoder)
@@ -52,12 +52,12 @@ class TestEventEncoder(unittest.TestCase):
         value = event.not_required
 
         # Then
-        self.assertEqual(value, None)
+        self.assertIs(value, NoValue)
 
     def test_attribute_value(self):
         # Given
-        event = SomeEvent(required=5)
-        expected = ('encoded_name', 5)
+        expected = 5
+        event = SomeEvent(required=expected)
 
         # When
         value = event.required
@@ -85,7 +85,7 @@ class TestEventEncoder(unittest.TestCase):
         value = event.custom_dimension
 
         # Then
-        self.assertEqual(value, None)
+        self.assertIs(value, NoValue)
 
     def test_custom_dimension_type(self):
         # Given
@@ -97,8 +97,8 @@ class TestEventEncoder(unittest.TestCase):
 
     def test_custom_dimension_valid(self):
         # Given
-        event = SomeEvent(custom_dimension='name')
-        expected = ('cd1', 'name')
+        expected = 'name'
+        event = SomeEvent(custom_dimension=expected)
 
         # When
         value = event.custom_dimension
@@ -114,7 +114,7 @@ class TestEventEncoder(unittest.TestCase):
         value = event.custom_metric
 
         # Then
-        self.assertEqual(value, None)
+        self.assertIs(value, NoValue)
 
     def test_custom_metric_type(self):
         # Given
@@ -126,8 +126,8 @@ class TestEventEncoder(unittest.TestCase):
 
     def test_custom_metric_valid(self):
         # Given
-        event = SomeEvent(custom_metric=2)
-        expected = ('cm5', 2)
+        expected = 2
+        event = SomeEvent(custom_metric=expected)
 
         # When
         value = event.custom_metric
