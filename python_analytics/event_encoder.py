@@ -1,36 +1,64 @@
 from __future__ import absolute_import, unicode_literals
+
+from abc import ABCMeta, abstractmethod
 from weakref import WeakKeyDictionary
 
 
 NoValue = object()
 
 
-class TrackedAttribute(object):
-
-    def __init__(self, target_name, type_, required=False):
+class _TrackedAttribute(metaclass=ABCMeta):
+    def __init__(self, required):
         self._name = None
-        self._target_name = target_name
-        self._type = type_
         self._required = required
-        self._data = WeakKeyDictionary()
+
+    def __get__(self, instance, owner):
+        value = self._get_value(instance, owner)
+        return self._format(value)
+
+    def __set__(self, instance, value):
+        self._check_type(value)
+        self._data[instance] = self._coerce(value)
 
     def set_attribute_name(self, name):
         self._name = name
 
-    def __get__(self, instance, owner):
+    def _get_value(self, instance, owner):
         value = self._data.get(instance, NoValue)
         if self._required and value is NoValue:
             raise ValueError(
                 'Missing required attribute {!r}'.format(self._name))
+        return value
+
+    @abstractmethod
+    def _format(self, value):
+        pass
+
+    @abstractmethod
+    def _coerce(self, value):
+        pass
+
+
+class TrackedAttribute(_TrackedAttribute):
+
+    def __init__(self, target_name, type_=None, required=False):
+        super(TrackedAttribute, self).__init__(required)
+        self._target_name = target_name
+        self._type = type_
+        self._data = WeakKeyDictionary()
+
+    def _format(self, value):
         if value is NoValue:
             return None
-        return (self._target_name, value)
+        return [(self._target_name, value)]
 
-    def __set__(self, instance, value):
-        if not isinstance(value, self._type):
+    def _coerce(self, value):
+        return value
+
+    def _check_type(self, value):
+        if self._type is not None and not isinstance(value, self._type):
             raise TypeError('Expected value {!r} to be of type {!r}'.format(
                 value, self._type))
-        self._data[instance] = value
 
 
 class Encoder(object):
@@ -40,8 +68,7 @@ class Encoder(object):
             item = getattr(self, attribute_name)
             if item is None:
                 continue
-            key, value = item
-            encoded[key] = value
+            encoded.update(item)
         return encoded
 
 
@@ -51,7 +78,7 @@ class EventEncoder(type):
         bases = (Encoder,) + bases
         tracked_attributes = []
         for key, value in list(class_dict.items()):
-            if isinstance(value, TrackedAttribute):
+            if isinstance(value, _TrackedAttribute):
                 value.set_attribute_name(key)
                 tracked_attributes.append(key)
         class_dict['_tracked_attributes'] = tuple(tracked_attributes)
