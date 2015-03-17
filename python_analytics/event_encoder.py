@@ -10,7 +10,7 @@ NoValue = object()
 
 
 @add_metaclass(ABCMeta)
-class _TrackedAttribute(object):
+class BaseParameter(object):
     def __init__(self, type_, required):
         self._name = None
         self._required = required
@@ -44,10 +44,10 @@ class _TrackedAttribute(object):
         """
 
 
-class TrackedAttribute(_TrackedAttribute):
+class Parameter(BaseParameter):
 
     def __init__(self, target_name, type_=None, required=False):
-        super(TrackedAttribute, self).__init__(type_, required)
+        super(Parameter, self).__init__(type_, required)
         self._target_name = target_name
 
     def _format(self, value):
@@ -56,13 +56,13 @@ class TrackedAttribute(_TrackedAttribute):
         return (self._target_name, value)
 
 
-class _CustomAttribute(_TrackedAttribute):
+class _CustomParameter(BaseParameter):
 
     FORMAT = None
     TYPE = None
 
     def __init__(self, index, required=False):
-        super(_CustomAttribute, self).__init__(self.TYPE, required)
+        super(_CustomParameter, self).__init__(self.TYPE, required)
         self._index = index
 
     def _format(self, value):
@@ -71,13 +71,13 @@ class _CustomAttribute(_TrackedAttribute):
         return (self.FORMAT.format(self._index), value)
 
 
-class CustomDimension(_CustomAttribute):
+class CustomDimension(_CustomParameter):
 
     FORMAT = 'cd{:d}'
     TYPE = text_type
 
 
-class CustomMetric(_CustomAttribute):
+class CustomMetric(_CustomParameter):
 
     FORMAT = 'cm{:d}'
     TYPE = int
@@ -115,7 +115,7 @@ class EventEncoder(type):
             tracked_attributes.update(
                 set(getattr(base, '_tracked_attributes', set())))
         for key, value in list(class_dict.items()):
-            if isinstance(value, _TrackedAttribute):
+            if isinstance(value, BaseParameter):
                 value.set_attribute_name(key)
                 tracked_attributes.add(key)
         class_dict['_tracked_attributes'] = tuple(tracked_attributes)

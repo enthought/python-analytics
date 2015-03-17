@@ -6,7 +6,7 @@ import uuid
 from six import add_metaclass, text_type, PY2
 from six.moves.urllib import parse
 
-from .event_encoder import TrackedAttribute, EventEncoder
+from .event_encoder import Parameter, EventEncoder
 from .utils import get_user_agent
 
 
@@ -43,9 +43,9 @@ class _AnalyticsHandler(object):
 @add_metaclass(EventEncoder)
 class Tracker(object):
 
-    version = TrackedAttribute('v', int)
-    tracking_id = TrackedAttribute('tid', text_type)
-    client_id = TrackedAttribute('cid', text_type)
+    version = Parameter('v', int)
+    tracking_id = Parameter('tid', text_type)
+    client_id = Parameter('cid', text_type)
 
     def __init__(self, tracking_id, client_id=None, requests_session=None):
         if client_id is None:

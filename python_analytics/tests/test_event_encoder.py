@@ -5,14 +5,14 @@ import unittest
 from six import add_metaclass, text_type
 
 from ..event_encoder import (
-    CustomDimension, CustomMetric, Encoder, EventEncoder, TrackedAttribute)
+    CustomDimension, CustomMetric, Encoder, EventEncoder, Parameter)
 
 
 @add_metaclass(EventEncoder)
 class SomeEvent(object):
 
-    required = TrackedAttribute('encoded_name', int, required=True)
-    not_required = TrackedAttribute('other_name', text_type)
+    required = Parameter('encoded_name', int, required=True)
+    not_required = Parameter('other_name', text_type)
     custom_dimension = CustomDimension(1)
     custom_metric = CustomMetric(5)
 
