@@ -3,7 +3,7 @@ from __future__ import absolute_import, unicode_literals
 import requests
 import uuid
 
-from six import add_metaclass
+from six import add_metaclass, text_type
 from six.moves.urllib import parse
 
 from .event_encoder import TrackedAttribute, EventEncoder
@@ -33,14 +33,14 @@ class _AnalyticsHandler(object):
 class Tracker(object):
 
     version = TrackedAttribute('v', int)
-    tracking_id = TrackedAttribute('tid', str)
-    client_id = TrackedAttribute('cid', str)
+    tracking_id = TrackedAttribute('tid', text_type)
+    client_id = TrackedAttribute('cid', text_type)
 
     def __init__(self, tracking_id, requests_session=None):
         self._handler = _AnalyticsHandler(session=requests_session)
         self.version = 1
         self.tracking_id = tracking_id
-        self.client_id = str(uuid.uuid4())
+        self.client_id = text_type(uuid.uuid4())
 
     def send(self, event):
         data = self.to_dict()
