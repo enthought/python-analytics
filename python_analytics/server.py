@@ -5,8 +5,8 @@ from .event_encoder import TrackedAttribute, EventEncoder
 
 class ServerInfo(object, metaclass=EventEncoder):
 
-    application_name = TrackedAttribute('an', str, required=False)
-    response_time = TrackedAttribute('srt', int, required=False)
+    application_name = TrackedAttribute('an', str)
+    response_time = TrackedAttribute('srt', int)
 
     def __init__(self, application_name=None, response_time=None):
         if application_name is not None:

@@ -5,8 +5,8 @@ from .event_encoder import TrackedAttribute, EventEncoder
 
 class Visitor(object, metaclass=EventEncoder):
 
-    user_agent = TrackedAttribute('ua', str, required=False)
-    ip_address = TrackedAttribute('uip', str, required=False)
+    user_agent = TrackedAttribute('ua', str)
+    ip_address = TrackedAttribute('uip', str)
 
     def __init__(self, user_agent=None, ip_address=None):
         if user_agent is not None:

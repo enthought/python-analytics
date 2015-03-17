@@ -7,7 +7,7 @@ NoValue = object()
 
 class TrackedAttribute(object):
 
-    def __init__(self, target_name, type_, required=True):
+    def __init__(self, target_name, type_, required=False):
         self._name = None
         self._target_name = target_name
         self._type = type_

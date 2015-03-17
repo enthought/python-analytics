@@ -32,11 +32,11 @@ class CustomMetric(_CustomField):
 
 class Event(object, metaclass=EventEncoder):
 
-    hit = TrackedAttribute('t', str)
-    category = TrackedAttribute('ec', str)
-    action = TrackedAttribute('ea', str)
-    label = TrackedAttribute('el', str, required=False)
-    value = TrackedAttribute('ev', int, required=False)
+    hit = TrackedAttribute('t', str, required=True)
+    category = TrackedAttribute('ec', str, required=True)
+    action = TrackedAttribute('ea', str, required=True)
+    label = TrackedAttribute('el', str)
+    value = TrackedAttribute('ev', int)
 
     def __init__(self, category, action, label=None, value=None,
                  custom_dimensions=None, custom_metrics=None):
