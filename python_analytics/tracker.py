@@ -10,6 +10,12 @@ from .event_encoder import TrackedAttribute, EventEncoder
 from .utils import get_user_agent
 
 
+def _encode(item):
+    if isinstance(item, text_type):
+        return item.encode('utf-8')
+    return item
+
+
 class _AnalyticsHandler(object):
 
     target = 'https://ssl.google-analytics.com/collect'
@@ -25,7 +31,8 @@ class _AnalyticsHandler(object):
 
     def send(self, data):
         if PY2:
-            # FIXME: Doesn't encode UTF-8!
+            data = [(_encode(key), _encode(value))
+                    for key, value in data.items()]
             encoded_data = parse.urlencode(data)
         else:
             encoded_data = parse.urlencode(data, encoding='utf-8')

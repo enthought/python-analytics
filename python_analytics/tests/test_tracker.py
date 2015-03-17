@@ -7,12 +7,24 @@ from mock import patch
 
 import requests
 import responses
-from six import PY2
+import six
+from six import PY2, binary_type
 from six.moves.urllib import parse
 
 from ..events import Event
 from ..tracker import _AnalyticsHandler, Tracker
 from ..utils import get_user_agent
+
+
+def _decode_qs(item):
+    if isinstance(item, binary_type):
+        return item.decode('utf-8')
+    elif isinstance(item, list):
+        return [_decode_qs(sub_item) for sub_item in item]
+    elif isinstance(item, dict):
+        return {_decode_qs(key): _decode_qs(value)
+                for key, value in item.items()}
+    return item
 
 
 class TestAnalyticsHandler(unittest.TestCase):
@@ -40,6 +52,31 @@ class TestAnalyticsHandler(unittest.TestCase):
         self.assertRegex(
             user_agent, r'^python-analytics/[^ ]+ MyAgent/1.0')
         self.assertEqual(user_agent, get_user_agent('MyAgent/1.0'))
+
+    @responses.activate
+    def test_encode_unicode(self):
+        # Given
+        responses.add(
+            responses.POST,
+            _AnalyticsHandler.target,
+            status=200,
+        )
+        key = '\N{GREEK SMALL LETTER MU}'
+        value = '\N{GREEK SMALL LETTER PI}'
+        handler = _AnalyticsHandler()
+        data = {key: value}
+
+        # When
+        handler.send(data)
+
+        # Then
+        self.assertEqual(len(responses.calls), 1)
+        call, = responses.calls
+        request, response = call
+        sent_encoded = request.body
+        sent_decoded = _decode_qs(parse.parse_qs(sent_encoded))
+
+        self.assertEqual(sent_decoded, {key: [value]})
 
     @responses.activate
     def test_send_analytics(self):
