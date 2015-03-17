@@ -13,10 +13,6 @@ class SomeEvent(object):
 
     required = TrackedAttribute('encoded_name', int, required=True)
     not_required = TrackedAttribute('other_name', text_type)
-
-
-@add_metaclass(EventEncoder)
-class CustomEvent(object):
     custom_dimension = CustomDimension(1)
     custom_metric = CustomMetric(5)
 
@@ -83,7 +79,7 @@ class TestEventEncoder(unittest.TestCase):
 
     def test_custom_dimension_empty(self):
         # Given
-        event = CustomEvent()
+        event = SomeEvent()
 
         # When
         value = event.custom_dimension
@@ -93,7 +89,7 @@ class TestEventEncoder(unittest.TestCase):
 
     def test_custom_dimension_type(self):
         # Given
-        event = CustomEvent()
+        event = SomeEvent()
 
         # When
         with self.assertRaises(TypeError):
@@ -101,7 +97,7 @@ class TestEventEncoder(unittest.TestCase):
 
     def test_custom_dimension_valid(self):
         # Given
-        event = CustomEvent(custom_dimension='name')
+        event = SomeEvent(custom_dimension='name')
         expected = ('cd1', 'name')
 
         # When
@@ -112,7 +108,7 @@ class TestEventEncoder(unittest.TestCase):
 
     def test_custom_metric_empty(self):
         # Given
-        event = CustomEvent()
+        event = SomeEvent()
 
         # When
         value = event.custom_metric
@@ -122,7 +118,7 @@ class TestEventEncoder(unittest.TestCase):
 
     def test_custom_metric_type(self):
         # Given
-        event = CustomEvent()
+        event = SomeEvent()
 
         # When
         with self.assertRaises(TypeError):
@@ -130,7 +126,7 @@ class TestEventEncoder(unittest.TestCase):
 
     def test_custom_metric_valid(self):
         # Given
-        event = CustomEvent(custom_metric=2)
+        event = SomeEvent(custom_metric=2)
         expected = ('cm5', 2)
 
         # When
