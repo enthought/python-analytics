@@ -22,7 +22,7 @@ class TestAnalyticsHandler(unittest.TestCase):
 
         # Then
         user_agent = handler._session.headers['User-Agent']
-        self.assertRegexpMatches(user_agent, r'^python-analytics/')
+        self.assertRegex(user_agent, r'^python-analytics/')
         self.assertEqual(user_agent, get_user_agent(None))
 
     def test_override_user_agent(self):
@@ -33,7 +33,7 @@ class TestAnalyticsHandler(unittest.TestCase):
 
         # Then
         user_agent = handler._session.headers['User-Agent']
-        self.assertRegexpMatches(
+        self.assertRegex(
             user_agent, r'^python-analytics/[^ ]+ MyAgent/1.0')
         self.assertEqual(user_agent, get_user_agent('MyAgent/1.0'))
 
