@@ -39,7 +39,9 @@ class _TrackedAttribute(object):
 
     @abstractmethod
     def _format(self, value):
-        pass
+        """Format the key and value for Google Analytics.
+
+        """
 
 
 class TrackedAttribute(_TrackedAttribute):
