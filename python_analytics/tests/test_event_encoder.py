@@ -4,7 +4,8 @@ import unittest
 
 from six import add_metaclass, text_type
 
-from ..event_encoder import EventEncoder, TrackedAttribute
+from ..event_encoder import (
+    CustomDimension, CustomMetric, Encoder, EventEncoder, TrackedAttribute)
 
 
 @add_metaclass(EventEncoder)
@@ -14,7 +15,22 @@ class SomeEvent(object):
     not_required = TrackedAttribute('other_name', text_type)
 
 
+@add_metaclass(EventEncoder)
+class CustomEvent(object):
+    custom_dimension = CustomDimension(1)
+    custom_metric = CustomMetric(5)
+
+
 class TestEventEncoder(unittest.TestCase):
+
+    def test_metaclass_instantiation(self):
+        # Given
+        event = SomeEvent()
+
+        # Then
+        self.assertIsInstance(event, SomeEvent)
+        self.assertIsInstance(event, Encoder)
+        self.assertIsInstance(event, object)
 
     def test_type_validation(self):
         # Given
@@ -64,3 +80,61 @@ class TestEventEncoder(unittest.TestCase):
         # When/Then
         with self.assertRaises(AttributeError):
             event.missing = 5
+
+    def test_custom_dimension_empty(self):
+        # Given
+        event = CustomEvent()
+
+        # When
+        value = event.custom_dimension
+
+        # Then
+        self.assertEqual(value, None)
+
+    def test_custom_dimension_type(self):
+        # Given
+        event = CustomEvent()
+
+        # When
+        with self.assertRaises(TypeError):
+            event.custom_dimension = 1
+
+    def test_custom_dimension_valid(self):
+        # Given
+        event = CustomEvent(custom_dimension='name')
+        expected = ('cd1', 'name')
+
+        # When
+        value = event.custom_dimension
+
+        # Then
+        self.assertEqual(value, expected)
+
+    def test_custom_metric_empty(self):
+        # Given
+        event = CustomEvent()
+
+        # When
+        value = event.custom_metric
+
+        # Then
+        self.assertEqual(value, None)
+
+    def test_custom_metric_type(self):
+        # Given
+        event = CustomEvent()
+
+        # When
+        with self.assertRaises(TypeError):
+            event.custom_metric = 'name'
+
+    def test_custom_metric_valid(self):
+        # Given
+        event = CustomEvent(custom_metric=2)
+        expected = ('cm5', 2)
+
+        # When
+        value = event.custom_metric
+
+        # Then
+        self.assertEqual(value, expected)
