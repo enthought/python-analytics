@@ -7,6 +7,7 @@ from mock import patch
 
 import requests
 import responses
+from six import PY2
 from six.moves.urllib import parse
 
 from ..events import Event
@@ -15,6 +16,9 @@ from ..utils import get_user_agent
 
 
 class TestAnalyticsHandler(unittest.TestCase):
+
+    if PY2:
+        assertRegex = unittest.TestCase.assertRegexpMatches
 
     def test_default_user_agent(self):
         # Given
