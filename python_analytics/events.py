@@ -41,33 +41,7 @@ class Event(object):
     label = TrackedAttribute('el', text_type)
     value = TrackedAttribute('ev', int)
 
-    def __init__(self, category, action, label=None, value=None,
-                 custom_dimensions=None, custom_metrics=None):
+    def __init__(self, **kwargs):
         self.hit = 'event'
-        self.category = category
-        self.action = action
-        if label is not None:
-            self.label = label
-        if value is not None:
-            self.value = value
-
-        if custom_dimensions is None:
-            custom_dimensions = ()
-        else:
-            custom_dimensions = tuple(custom_dimensions)
-
-        if custom_metrics is None:
-            custom_metrics = ()
-        else:
-            custom_metrics = tuple(custom_metrics)
-
-        self._dimensions = custom_dimensions
-        self._metrics = custom_metrics
-
-    def to_dict(self):
-        value = super(Event, self).to_dict()
-        for dimension in self._dimensions:
-            value[dimension.key] = dimension.value
-        for metric in self._metrics:
-            value[metric.key] = metric.value
-        return value
+        for name, value in kwargs.items():
+            setattr(self, name, value)

@@ -88,7 +88,7 @@ class TestTracker(unittest.TestCase):
         category = 'category'
         action = 'action'
         tracker = Tracker('GA-ID')
-        event = Event(category, action)
+        event = Event(category=category, action=action)
         expected = {
             'v': ['1'],
             'tid': ['GA-ID'],

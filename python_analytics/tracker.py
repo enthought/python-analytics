@@ -40,11 +40,16 @@ class Tracker(object):
     tracking_id = TrackedAttribute('tid', text_type)
     client_id = TrackedAttribute('cid', text_type)
 
-    def __init__(self, tracking_id, requests_session=None):
-        self._handler = _AnalyticsHandler(session=requests_session)
-        self.version = 1
-        self.tracking_id = tracking_id
-        self.client_id = text_type(uuid.uuid4())
+    def __init__(self, tracking_id, client_id=None, requests_session=None):
+        if client_id is None:
+            client_id = text_type(uuid.uuid4())
+        super(Tracker, self).__init__(
+            version=1,
+            tracking_id=tracking_id,
+            client_id=client_id,
+        )
+        handler = _AnalyticsHandler(session=requests_session)
+        object.__setattr__(self, '_handler', handler)
 
     def send(self, event):
         data = self.to_dict()

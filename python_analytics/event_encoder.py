@@ -65,6 +65,15 @@ class TrackedAttribute(_TrackedAttribute):
 
 
 class Encoder(object):
+    def __init__(self, **kwargs):
+        for name, value in kwargs.items():
+            setattr(self, name, value)
+
+    def __setattr__(self, name, value):
+        if name not in self._tracked_attributes:
+            raise AttributeError(name)
+        super(Encoder, self).__setattr__(name, value)
+
     def to_dict(self):
         encoded = {}
         for attribute_name in self._tracked_attributes:
