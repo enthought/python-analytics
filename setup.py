@@ -92,10 +92,11 @@ if not is_released:
                                  git_revision=git_rev,
                                  is_released=IS_RELEASED))
 
+    return fullversion
+
 
 if __name__ == "__main__":
-    write_version_py()
-    from python_analytics import __version__
+    __version__ = write_version_py()
 
     setup(name="python-analytics",
           version=__version__,
