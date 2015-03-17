@@ -3,7 +3,7 @@ from __future__ import absolute_import, unicode_literals
 import requests
 import uuid
 
-from six import add_metaclass, text_type
+from six import add_metaclass, text_type, PY2
 from six.moves.urllib import parse
 
 from .event_encoder import TrackedAttribute, EventEncoder
@@ -24,7 +24,11 @@ class _AnalyticsHandler(object):
         self._session = session
 
     def send(self, data):
-        encoded_data = parse.urlencode(data, encoding='utf-8')
+        if PY2:
+            # FIXME: Doesn't encode UTF-8!
+            encoded_data = parse.urlencode(data)
+        else:
+            encoded_data = parse.urlencode(data, encoding='utf-8')
         response = self._session.post(self.target, data=encoded_data)
         response.raise_for_status()
 
