@@ -4,6 +4,17 @@ try:  # pragma: no cover
 except ImportError:  # pragma: no cover
     __version__ = "not-built"
 
+__all__ = [
+    'CustomDimension',
+    'CustomMetric',
+    'Event',
+    'Tracker',
+]
+
+from .events import Event
+from .event_encoder import CustomDimension, CustomMetric
+from .tracker import Tracker
+
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())

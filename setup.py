@@ -84,7 +84,7 @@ if not is_released:
         dev_num = '0'
 
     if not IS_RELEASED:
-        fullversion += '.dev{0}+{1}'.format(dev_num, git_rev[:7])
+        fullversion += '.dev{0}'.format(dev_num)
 
     with open(filename, "wt") as fp:
         fp.write(template.format(version=VERSION,
@@ -92,10 +92,11 @@ if not is_released:
                                  git_revision=git_rev,
                                  is_released=IS_RELEASED))
 
+    return fullversion
+
 
 if __name__ == "__main__":
-    write_version_py()
-    from python_analytics import __version__
+    __version__ = write_version_py()
 
     setup(name="python-analytics",
           version=__version__,

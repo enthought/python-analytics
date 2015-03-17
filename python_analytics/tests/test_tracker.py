@@ -7,182 +7,30 @@ from mock import patch
 
 import requests
 import responses
+import six
+from six import PY2, binary_type
 from six.moves.urllib import parse
 
-from ..tracker import (
-    _AnalyticsHandler, CustomDimension, CustomMetric, Event, Tracker)
+from ..events import Event
+from ..tracker import _AnalyticsHandler, Tracker
 from ..utils import get_user_agent
 
 
-class TestCustomFields(unittest.TestCase):
-
-    def test_custom_dimension(self):
-        # Given
-        dimension = CustomDimension(1, 42)
-
-        # Then
-        self.assertEqual(dimension.key, 'cd1')
-        self.assertEqual(dimension.value, 42)
-
-        # Given
-        dimension = CustomDimension(2, 'eight')
-
-        # Then
-        self.assertEqual(dimension.key, 'cd2')
-        self.assertEqual(dimension.value, 'eight')
-
-    def test_custom_metric(self):
-        # Given
-        dimension = CustomMetric(1, 42)
-
-        # Then
-        self.assertEqual(dimension.key, 'cm1')
-        self.assertEqual(dimension.value, 42)
-
-        # Given
-        dimension = CustomMetric(2, 'eight')
-
-        # Then
-        self.assertEqual(dimension.key, 'cm2')
-        self.assertEqual(dimension.value, 'eight')
-
-
-class TestEvent(unittest.TestCase):
-
-    def test_event_no_label_value(self):
-        # Given
-        category = 'category'
-        action = 'action'
-        event = Event(
-            category=category, action=action)
-        expected = {
-            't': 'event',
-            'ec': category,
-            'ea': action,
-        }
-
-        # When
-        event_dict = event.to_dict()
-
-        # Then
-        self.assertEqual(event_dict, expected)
-
-    def test_event_label_no_value(self):
-        # Given
-        category = 'category'
-        action = 'action'
-        label = 'an-event-label'
-        event = Event(
-            category=category, action=action, label=label)
-        expected = {
-            't': 'event',
-            'ec': category,
-            'ea': action,
-            'el': label,
-        }
-
-        # When
-        event_dict = event.to_dict()
-
-        # Then
-        self.assertEqual(event_dict, expected)
-
-    def test_event_value_no_label(self):
-        # Given
-        category = 'category'
-        action = 'action'
-        value = 42
-        event = Event(
-            category=category, action=action, value=value)
-        expected = {
-            't': 'event',
-            'ec': category,
-            'ea': action,
-            'ev': value,
-        }
-
-        # When
-        event_dict = event.to_dict()
-
-        # Then
-        self.assertEqual(event_dict, expected)
-
-    def test_event_label_value(self):
-        # Given
-        category = 'category'
-        action = 'action'
-        label = 'Another event!'
-        value = 42
-        event = Event(
-            category=category, action=action, label=label, value=value)
-        expected = {
-            't': 'event',
-            'ec': category,
-            'ea': action,
-            'el': label,
-            'ev': value,
-        }
-
-        # When
-        event_dict = event.to_dict()
-
-        # Then
-        self.assertEqual(event_dict, expected)
-
-    def test_event_dimensions(self):
-        # Given
-        dimension_value = 'some-value'
-        dimension = CustomDimension(1, dimension_value)
-        category = 'category'
-        action = 'action'
-        label = 'Another event!'
-        value = 42
-        event = Event(
-            category=category, action=action, label=label, value=value,
-            custom_dimensions=[dimension])
-        expected = {
-            't': 'event',
-            'ec': category,
-            'ea': action,
-            'el': label,
-            'ev': value,
-            'cd1': dimension_value,
-        }
-
-        # When
-        event_dict = event.to_dict()
-
-        # Then
-        self.assertEqual(event_dict, expected)
-
-    def test_event_metrics(self):
-        # Given
-        metric_value = 28
-        metric = CustomMetric(1, metric_value)
-        category = 'category'
-        action = 'action'
-        label = 'Another event!'
-        value = 42
-        event = Event(
-            category=category, action=action, label=label, value=value,
-            custom_metrics=[metric])
-        expected = {
-            't': 'event',
-            'ec': category,
-            'ea': action,
-            'el': label,
-            'ev': value,
-            'cm1': metric_value,
-        }
-
-        # When
-        event_dict = event.to_dict()
-
-        # Then
-        self.assertEqual(event_dict, expected)
+def _decode_qs(item):
+    if isinstance(item, binary_type):
+        return item.decode('utf-8')
+    elif isinstance(item, list):
+        return [_decode_qs(sub_item) for sub_item in item]
+    elif isinstance(item, dict):
+        return {_decode_qs(key): _decode_qs(value)
+                for key, value in item.items()}
+    return item
 
 
 class TestAnalyticsHandler(unittest.TestCase):
+
+    if PY2:
+        assertRegex = unittest.TestCase.assertRegexpMatches
 
     def test_default_user_agent(self):
         # Given
@@ -190,7 +38,7 @@ class TestAnalyticsHandler(unittest.TestCase):
 
         # Then
         user_agent = handler._session.headers['User-Agent']
-        self.assertRegexpMatches(user_agent, r'^python-analytics/')
+        self.assertRegex(user_agent, r'^python-analytics/')
         self.assertEqual(user_agent, get_user_agent(None))
 
     def test_override_user_agent(self):
@@ -201,9 +49,34 @@ class TestAnalyticsHandler(unittest.TestCase):
 
         # Then
         user_agent = handler._session.headers['User-Agent']
-        self.assertRegexpMatches(
+        self.assertRegex(
             user_agent, r'^python-analytics/[^ ]+ MyAgent/1.0')
         self.assertEqual(user_agent, get_user_agent('MyAgent/1.0'))
+
+    @responses.activate
+    def test_encode_unicode(self):
+        # Given
+        responses.add(
+            responses.POST,
+            _AnalyticsHandler.target,
+            status=200,
+        )
+        key = '\N{GREEK SMALL LETTER MU}'
+        value = '\N{GREEK SMALL LETTER PI}'
+        handler = _AnalyticsHandler()
+        data = {key: value}
+
+        # When
+        handler.send(data)
+
+        # Then
+        self.assertEqual(len(responses.calls), 1)
+        call, = responses.calls
+        request, response = call
+        sent_encoded = request.body
+        sent_decoded = _decode_qs(parse.parse_qs(sent_encoded))
+
+        self.assertEqual(sent_decoded, {key: [value]})
 
     @responses.activate
     def test_send_analytics(self):
@@ -256,7 +129,7 @@ class TestTracker(unittest.TestCase):
         category = 'category'
         action = 'action'
         tracker = Tracker('GA-ID')
-        event = Event(category, action)
+        event = Event(category=category, action=action)
         expected = {
             'v': ['1'],
             'tid': ['GA-ID'],

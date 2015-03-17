@@ -3,9 +3,17 @@ from __future__ import absolute_import, unicode_literals
 import requests
 import uuid
 
+from six import add_metaclass, text_type, PY2
 from six.moves.urllib import parse
 
+from .event_encoder import Parameter, EventEncoder
 from .utils import get_user_agent
+
+
+def _encode(item):
+    if isinstance(item, text_type):
+        return item.encode('utf-8')
+    return item
 
 
 class _AnalyticsHandler(object):
@@ -22,87 +30,35 @@ class _AnalyticsHandler(object):
         self._session = session
 
     def send(self, data):
-        encoded_data = parse.urlencode(data, encoding='utf-8')
-        self._session.post(self.target, data=encoded_data)
+        if PY2:
+            data = [(_encode(key), _encode(value))
+                    for key, value in data.items()]
+            encoded_data = parse.urlencode(data)
+        else:
+            encoded_data = parse.urlencode(data, encoding='utf-8')
+        response = self._session.post(self.target, data=encoded_data)
+        response.raise_for_status()
 
 
+@add_metaclass(EventEncoder)
 class Tracker(object):
 
-    def __init__(self, tracking_id, requests_session=None):
-        self._handler = _AnalyticsHandler(session=requests_session)
-        self.tracking_id = tracking_id
+    version = Parameter('v', int)
+    tracking_id = Parameter('tid', text_type)
+    client_id = Parameter('cid', text_type)
 
-    def send(self, obj):
-        data = {
-            'v': 1,
-            'tid': self.tracking_id,
-            'cid': str(uuid.uuid4()),
-        }
-        data.update(obj.to_dict())
+    def __init__(self, tracking_id, client_id=None, requests_session=None):
+        if client_id is None:
+            client_id = text_type(uuid.uuid4())
+        super(Tracker, self).__init__(
+            version=1,
+            tracking_id=tracking_id,
+            client_id=client_id,
+        )
+        handler = _AnalyticsHandler(session=requests_session)
+        object.__setattr__(self, '_handler', handler)
+
+    def send(self, event):
+        data = self.to_dict()
+        data.update(event.to_dict())
         self._handler.send(data)
-
-
-class _CustomField(object):
-
-    FORMAT = None
-
-    def __init__(self, index, value):
-        self._index = index
-        self._value = value
-
-    @property
-    def key(self):
-        return self.FORMAT.format(self._index)
-
-    @property
-    def value(self):
-        return self._value
-
-
-class CustomDimension(_CustomField):
-
-    FORMAT = 'cd{:d}'
-
-
-class CustomMetric(_CustomField):
-
-    FORMAT = 'cm{:d}'
-
-
-class Event(object):
-
-    def __init__(self, category, action, label=None, value=None,
-                 custom_dimensions=None, custom_metrics=None):
-        self.category = category
-        self.action = action
-        self.label = label
-        self.value = value
-
-        if custom_dimensions is None:
-            custom_dimensions = ()
-        else:
-            custom_dimensions = tuple(custom_dimensions)
-
-        if custom_metrics is None:
-            custom_metrics = ()
-        else:
-            custom_metrics = tuple(custom_metrics)
-
-        self._dimensions = custom_dimensions
-        self._metrics = custom_metrics
-
-    def to_dict(self):
-        value = {
-            't': 'event',
-            'ec': self.category,
-            'ea': self.action,
-        }
-        if self.label is not None:
-            value['el'] = self.label
-        if self.value is not None:
-            value['ev'] = self.value
-        for dimension in self._dimensions:
-            value[dimension.key] = dimension.value
-        for metric in self._metrics:
-            value[metric.key] = metric.value
-        return value
