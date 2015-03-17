@@ -92,11 +92,12 @@ class Encoder(object):
 
     def to_dict(self):
         encoded = {}
+        type_ = type(self)
         for attribute_name in self._tracked_attributes:
             item = getattr(self, attribute_name)
             if item is NoValue:
                 continue
-            formatter = getattr(type(self), attribute_name)
+            formatter = getattr(type_, attribute_name)
             key, value = formatter.format(item)
             encoded[key] = value
         return encoded
