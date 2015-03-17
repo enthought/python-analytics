@@ -1,9 +1,12 @@
 from __future__ import absolute_import, unicode_literals
 
+from six import add_metaclass
+
 from .event_encoder import TrackedAttribute, EventEncoder
 
 
-class ServerInfo(object, metaclass=EventEncoder):
+@add_metaclass(EventEncoder)
+class ServerInfo(object):
 
     application_name = TrackedAttribute('an', str)
     response_time = TrackedAttribute('srt', int)

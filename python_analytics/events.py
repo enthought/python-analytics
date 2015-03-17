@@ -1,5 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 
+from six import add_metaclass
+
 from .event_encoder import TrackedAttribute, EventEncoder
 
 
@@ -30,7 +32,8 @@ class CustomMetric(_CustomField):
     FORMAT = 'cm{:d}'
 
 
-class Event(object, metaclass=EventEncoder):
+@add_metaclass(EventEncoder)
+class Event(object):
 
     hit = TrackedAttribute('t', str, required=True)
     category = TrackedAttribute('ec', str, required=True)

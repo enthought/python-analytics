@@ -3,6 +3,7 @@ from __future__ import absolute_import, unicode_literals
 import requests
 import uuid
 
+from six import add_metaclass
 from six.moves.urllib import parse
 
 from .event_encoder import TrackedAttribute, EventEncoder
@@ -28,7 +29,8 @@ class _AnalyticsHandler(object):
         response.raise_for_status()
 
 
-class Tracker(object, metaclass=EventEncoder):
+@add_metaclass(EventEncoder)
+class Tracker(object):
 
     version = TrackedAttribute('v', int)
     tracking_id = TrackedAttribute('tid', str)

@@ -3,11 +3,14 @@ from __future__ import absolute_import, unicode_literals
 from abc import ABCMeta, abstractmethod
 from weakref import WeakKeyDictionary
 
+from six import add_metaclass
+
 
 NoValue = object()
 
 
-class _TrackedAttribute(metaclass=ABCMeta):
+@add_metaclass(ABCMeta)
+class _TrackedAttribute(object):
     def __init__(self, required):
         self._name = None
         self._required = required

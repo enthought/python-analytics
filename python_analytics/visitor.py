@@ -1,9 +1,12 @@
 from __future__ import absolute_import, unicode_literals
 
+from six import add_metaclass
+
 from .event_encoder import TrackedAttribute, EventEncoder
 
 
-class Visitor(object, metaclass=EventEncoder):
+@add_metaclass(EventEncoder)
+class Visitor(object):
 
     user_agent = TrackedAttribute('ua', str)
     ip_address = TrackedAttribute('uip', str)
