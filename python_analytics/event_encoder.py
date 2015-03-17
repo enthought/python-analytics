@@ -3,7 +3,7 @@ from __future__ import absolute_import, unicode_literals
 from abc import ABCMeta, abstractmethod
 from weakref import WeakKeyDictionary
 
-from six import add_metaclass
+from six import add_metaclass, text_type
 
 
 NoValue = object()
@@ -11,17 +11,21 @@ NoValue = object()
 
 @add_metaclass(ABCMeta)
 class _TrackedAttribute(object):
-    def __init__(self, required):
+    def __init__(self, type_, required):
         self._name = None
         self._required = required
+        self._type = type_
+        self._data = WeakKeyDictionary()
 
     def __get__(self, instance, owner):
         value = self._get_value(instance, owner)
         return self._format(value)
 
     def __set__(self, instance, value):
-        self._check_type(value)
-        self._data[instance] = self._coerce(value)
+        if self._type is not None and not isinstance(value, self._type):
+            raise TypeError('Expected value {!r} to be of type {!r}'.format(
+                value, self._type))
+        self._data[instance] = value
 
     def set_attribute_name(self, name):
         self._name = name
@@ -37,31 +41,44 @@ class _TrackedAttribute(object):
     def _format(self, value):
         pass
 
-    @abstractmethod
-    def _coerce(self, value):
-        pass
-
 
 class TrackedAttribute(_TrackedAttribute):
 
     def __init__(self, target_name, type_=None, required=False):
-        super(TrackedAttribute, self).__init__(required)
+        super(TrackedAttribute, self).__init__(type_, required)
         self._target_name = target_name
-        self._type = type_
-        self._data = WeakKeyDictionary()
 
     def _format(self, value):
         if value is NoValue:
             return None
         return [(self._target_name, value)]
 
-    def _coerce(self, value):
-        return value
 
-    def _check_type(self, value):
-        if self._type is not None and not isinstance(value, self._type):
-            raise TypeError('Expected value {!r} to be of type {!r}'.format(
-                value, self._type))
+class _CustomAttribute(_TrackedAttribute):
+
+    FORMAT = None
+    TYPE = None
+
+    def __init__(self, index, required=False):
+        super(_CustomAttribute, self).__init__(self.TYPE, required)
+        self._index = index
+
+    def _format(self, value):
+        if value is NoValue:
+            return None
+        return [(self.FORMAT.format(self._index), value)]
+
+
+class CustomDimension(_CustomAttribute):
+
+    FORMAT = 'cd{:d}'
+    TYPE = text_type
+
+
+class CustomMetric(_CustomAttribute):
+
+    FORMAT = 'cm{:d}'
+    TYPE = int
 
 
 class Encoder(object):
@@ -87,11 +104,16 @@ class Encoder(object):
 class EventEncoder(type):
 
     def __new__(cls, class_name, bases, class_dict):
-        bases = (Encoder,) + bases
-        tracked_attributes = []
+        bases = tuple(base for base in bases if base is not object)
+        if Encoder not in bases:
+            bases = bases + (Encoder,)
+        tracked_attributes = set()
+        for base in bases:
+            tracked_attributes.update(
+                set(getattr(base, '_tracked_attributes', set())))
         for key, value in list(class_dict.items()):
             if isinstance(value, _TrackedAttribute):
                 value.set_attribute_name(key)
-                tracked_attributes.append(key)
+                tracked_attributes.add(key)
         class_dict['_tracked_attributes'] = tuple(tracked_attributes)
         return type.__new__(cls, class_name, bases, class_dict)

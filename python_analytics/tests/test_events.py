@@ -2,40 +2,10 @@ from __future__ import absolute_import, unicode_literals
 
 import unittest
 
-from ..events import CustomDimension, CustomMetric, Event
+from six import text_type
 
-
-class TestCustomFields(unittest.TestCase):
-
-    def test_custom_dimension(self):
-        # Given
-        dimension = CustomDimension(1, 42)
-
-        # Then
-        self.assertEqual(dimension.key, 'cd1')
-        self.assertEqual(dimension.value, 42)
-
-        # Given
-        dimension = CustomDimension(2, 'eight')
-
-        # Then
-        self.assertEqual(dimension.key, 'cd2')
-        self.assertEqual(dimension.value, 'eight')
-
-    def test_custom_metric(self):
-        # Given
-        dimension = CustomMetric(1, 42)
-
-        # Then
-        self.assertEqual(dimension.key, 'cm1')
-        self.assertEqual(dimension.value, 42)
-
-        # Given
-        dimension = CustomMetric(2, 'eight')
-
-        # Then
-        self.assertEqual(dimension.key, 'cm2')
-        self.assertEqual(dimension.value, 'eight')
+from ..event_encoder import CustomDimension, CustomMetric
+from ..events import Event
 
 
 class TestEvent(unittest.TestCase):
@@ -122,15 +92,17 @@ class TestEvent(unittest.TestCase):
 
     def test_event_dimensions(self):
         # Given
+        class MyEvent(Event):
+            some_dimension = CustomDimension(1)
+
         dimension_value = 'some-value'
-        dimension = CustomDimension(1, dimension_value)
         category = 'category'
         action = 'action'
         label = 'Another event!'
         value = 42
-        event = Event(
+        event = MyEvent(
             category=category, action=action, label=label, value=value,
-            custom_dimensions=[dimension])
+            some_dimension=dimension_value)
         expected = {
             't': 'event',
             'ec': category,
@@ -148,22 +120,24 @@ class TestEvent(unittest.TestCase):
 
     def test_event_metrics(self):
         # Given
+        class MyEvent(Event):
+            some_metric = CustomMetric(5)
+
         metric_value = 28
-        metric = CustomMetric(1, metric_value)
         category = 'category'
         action = 'action'
         label = 'Another event!'
         value = 42
-        event = Event(
+        event = MyEvent(
             category=category, action=action, label=label, value=value,
-            custom_metrics=[metric])
+            some_metric=metric_value)
         expected = {
             't': 'event',
             'ec': category,
             'ea': action,
             'el': label,
             'ev': value,
-            'cm1': metric_value,
+            'cm5': metric_value,
         }
 
         # When

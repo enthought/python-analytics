@@ -11,7 +11,8 @@ __all__ = [
     'Tracker',
 ]
 
-from .events import CustomDimension, CustomMetric, Event
+from .events import Event
+from .event_encoder import CustomDimension, CustomMetric
 from .tracker import Tracker
 
 
