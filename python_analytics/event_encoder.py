@@ -51,7 +51,7 @@ class TrackedAttribute(_TrackedAttribute):
     def _format(self, value):
         if value is NoValue:
             return None
-        return [(self._target_name, value)]
+        return (self._target_name, value)
 
 
 class _CustomAttribute(_TrackedAttribute):
@@ -66,7 +66,7 @@ class _CustomAttribute(_TrackedAttribute):
     def _format(self, value):
         if value is NoValue:
             return None
-        return [(self.FORMAT.format(self._index), value)]
+        return (self.FORMAT.format(self._index), value)
 
 
 class CustomDimension(_CustomAttribute):
@@ -97,7 +97,8 @@ class Encoder(object):
             item = getattr(self, attribute_name)
             if item is None:
                 continue
-            encoded.update(item)
+            key, value = item
+            encoded[key] = value
         return encoded
 
 
