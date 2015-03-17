@@ -58,7 +58,16 @@ class Tracker(object):
         handler = _AnalyticsHandler(session=requests_session)
         object.__setattr__(self, '_handler', handler)
 
-    def send(self, event):
+    def send(self, *event_parts):
+        """Construct the Universal Analytics request and send it upstream.
+
+        This accepts one or more python-analytics-derived event types,
+        and uses the union of all data as a single analytics request.
+        This can be used to create separate Visitor and Server
+        information types used to augment an Event.
+
+        """
         data = self.to_dict()
-        data.update(event.to_dict())
+        for event in event_parts:
+            data.update(event.to_dict())
         self._handler.send(data)
