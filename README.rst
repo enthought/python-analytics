@@ -42,7 +42,7 @@ attributes::
     ...     file_size=14322978,
     ... )
     # This handles encoding the custom dimensions as expected
-    >>> print(event.to_dict())
+    >>> print(event.encode())
     {'cd2': 'x86_64', 'cm1': 14322978, 'cd1': 'installer.msi',
      'ea': 'download-installer', 't': 'event', 'ec': 'downloads'}
     >>> tracker.send(event)

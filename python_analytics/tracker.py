@@ -59,6 +59,6 @@ class Tracker(object):
         object.__setattr__(self, '_handler', handler)
 
     def send(self, event):
-        data = self.to_dict()
-        data.update(event.to_dict())
+        data = self.encode()
+        data.update(event.encode())
         self._handler.send(data)

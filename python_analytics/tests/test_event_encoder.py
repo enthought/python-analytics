@@ -135,18 +135,55 @@ class TestEventEncoder(unittest.TestCase):
         # Then
         self.assertEqual(value, expected)
 
-    def test_to_dict_missing_required(self):
+    def test_encode_missing_required(self):
         # Given
         event = SomeEvent()
 
         # When/Then
         with self.assertRaises(ValueError):
-            event.to_dict()
+            event.encode()
+
+    def test_encode_missing_optional(self):
+        # Given
+        event = SomeEvent(required=4)
+        expected = {'encoded_name': 4}
+
+        # When
+        value = event.encode()
+
+        # Then
+        self.assertEqual(value, expected)
+
+    def test_encode_all_values(self):
+        # Given
+        event = SomeEvent(required=4, custom_dimension='thing')
+        event.not_required = 'test'
+        event.custom_metric = 12
+        expected = {'encoded_name': 4,
+                    'other_name': 'test',
+                    'cd1': 'thing',
+                    'cm5': 12}
+
+        # When
+        value = event.encode()
+
+        # Then
+        self.assertEqual(value, expected)
+
+    def test_to_dict_missing_required(self):
+        # Given
+        event = SomeEvent()
+
+        # When
+        value = event.to_dict()
+
+        # Then
+        self.assertEqual(value, {})
 
     def test_to_dict_missing_optional(self):
         # Given
         event = SomeEvent(required=4)
-        expected = {'encoded_name': 4}
+        expected = {'required': 4}
 
         # When
         value = event.to_dict()
@@ -159,13 +196,42 @@ class TestEventEncoder(unittest.TestCase):
         event = SomeEvent(required=4, custom_dimension='thing')
         event.not_required = 'test'
         event.custom_metric = 12
-        expected = {'encoded_name': 4,
-                    'other_name': 'test',
-                    'cd1': 'thing',
-                    'cm5': 12}
+        expected = {'required': 4,
+                    'not_required': 'test',
+                    'custom_dimension': 'thing',
+                    'custom_metric': 12}
 
         # When
         value = event.to_dict()
 
         # Then
         self.assertEqual(value, expected)
+
+    def test_to_dict_round_trip(self):
+        # Given
+        not_required = 'test'
+        required = 10
+        event = SomeEvent(not_required=not_required)
+        initial_expected = {'not_required': not_required}
+        final_expected = {'not_required': not_required,
+                          'required': required}
+        encode_expected = {'encoded_name': required,
+                           'other_name': not_required}
+
+        # When
+        value = event.to_dict()
+        with self.assertRaises(ValueError):
+            event.encode()
+
+        # Then
+        self.assertEqual(value, initial_expected)
+
+        # When
+        new_event = SomeEvent(**value)
+        new_event.required = 10
+        new_value = new_event.to_dict()
+        encoded = new_event.encode()
+
+        # Then
+        self.assertEqual(new_value, final_expected)
+        self.assertEqual(encoded, encode_expected)
