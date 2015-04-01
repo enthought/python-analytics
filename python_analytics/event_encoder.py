@@ -91,6 +91,10 @@ class Encoder(object):
         super(Encoder, self).__setattr__(name, value)
 
     def encode(self):
+        """Encode the object to a dictionary with the keys corresponding to
+        the expected Google Analytics attributes.
+
+        """
         encoded = {}
         type_ = type(self)
         for attribute_name in self._tracked_attributes:
@@ -100,6 +104,19 @@ class Encoder(object):
             formatter = getattr(type_, attribute_name)
             key, value = formatter.format(item)
             encoded[key] = value
+        return encoded
+
+    def to_dict(self):
+        """Dump the object value as a dictionary. This can be used in
+        reonstructing a new object.
+
+        """
+        encoded = {}
+        for attribute_name in self._tracked_attributes:
+            value = getattr(self, attribute_name)
+            if value is NoValue:
+                continue
+            encoded[attribute_name] = value
         return encoded
 
 
