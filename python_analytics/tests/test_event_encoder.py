@@ -135,26 +135,26 @@ class TestEventEncoder(unittest.TestCase):
         # Then
         self.assertEqual(value, expected)
 
-    def test_to_dict_missing_required(self):
+    def test_encode_missing_required(self):
         # Given
         event = SomeEvent()
 
         # When/Then
         with self.assertRaises(ValueError):
-            event.to_dict()
+            event.encode()
 
-    def test_to_dict_missing_optional(self):
+    def test_encode_missing_optional(self):
         # Given
         event = SomeEvent(required=4)
         expected = {'encoded_name': 4}
 
         # When
-        value = event.to_dict()
+        value = event.encode()
 
         # Then
         self.assertEqual(value, expected)
 
-    def test_to_dict_all_values(self):
+    def test_encode_all_values(self):
         # Given
         event = SomeEvent(required=4, custom_dimension='thing')
         event.not_required = 'test'
@@ -165,7 +165,7 @@ class TestEventEncoder(unittest.TestCase):
                     'cm5': 12}
 
         # When
-        value = event.to_dict()
+        value = event.encode()
 
         # Then
         self.assertEqual(value, expected)

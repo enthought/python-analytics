@@ -23,7 +23,7 @@ class TestEvent(unittest.TestCase):
         }
 
         # When
-        event_dict = event.to_dict()
+        event_dict = event.encode()
 
         # Then
         self.assertEqual(event_dict, expected)
@@ -43,7 +43,7 @@ class TestEvent(unittest.TestCase):
         }
 
         # When
-        event_dict = event.to_dict()
+        event_dict = event.encode()
 
         # Then
         self.assertEqual(event_dict, expected)
@@ -63,7 +63,7 @@ class TestEvent(unittest.TestCase):
         }
 
         # When
-        event_dict = event.to_dict()
+        event_dict = event.encode()
 
         # Then
         self.assertEqual(event_dict, expected)
@@ -85,7 +85,7 @@ class TestEvent(unittest.TestCase):
         }
 
         # When
-        event_dict = event.to_dict()
+        event_dict = event.encode()
 
         # Then
         self.assertEqual(event_dict, expected)
@@ -113,7 +113,7 @@ class TestEvent(unittest.TestCase):
         }
 
         # When
-        event_dict = event.to_dict()
+        event_dict = event.encode()
 
         # Then
         self.assertEqual(event_dict, expected)
@@ -141,7 +141,7 @@ class TestEvent(unittest.TestCase):
         }
 
         # When
-        event_dict = event.to_dict()
+        event_dict = event.encode()
 
         # Then
         self.assertEqual(event_dict, expected)

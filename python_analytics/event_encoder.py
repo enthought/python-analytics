@@ -90,7 +90,7 @@ class Encoder(object):
             raise AttributeError(name)
         super(Encoder, self).__setattr__(name, value)
 
-    def to_dict(self):
+    def encode(self):
         encoded = {}
         type_ = type(self)
         for attribute_name in self._tracked_attributes:
