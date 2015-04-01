@@ -206,3 +206,32 @@ class TestEventEncoder(unittest.TestCase):
 
         # Then
         self.assertEqual(value, expected)
+
+    def test_to_dict_round_trip(self):
+        # Given
+        not_required = 'test'
+        required = 10
+        event = SomeEvent(not_required=not_required)
+        initial_expected = {'not_required': not_required}
+        final_expected = {'not_required': not_required,
+                          'required': required}
+        encode_expected = {'encoded_name': required,
+                           'other_name': not_required}
+
+        # When
+        value = event.to_dict()
+        with self.assertRaises(ValueError):
+            event.encode()
+
+        # Then
+        self.assertEqual(value, initial_expected)
+
+        # When
+        new_event = SomeEvent(**value)
+        new_event.required = 10
+        new_value = new_event.to_dict()
+        encoded = new_event.encode()
+
+        # Then
+        self.assertEqual(new_value, final_expected)
+        self.assertEqual(encoded, encode_expected)
