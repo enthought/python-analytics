@@ -17,6 +17,9 @@ class BaseParameter(object):
         self._type = type_
         self._data = WeakKeyDictionary()
 
+    def get_value(self, instance):
+        return self._data.get(instance, NoValue)
+
     def __get__(self, instance, owner):
         if instance is None:
             return self
@@ -32,7 +35,7 @@ class BaseParameter(object):
         self._name = name
 
     def _get_value(self, instance, owner):
-        value = self._data.get(instance, NoValue)
+        value = self.get_value(instance)
         if self._required and value is NoValue:
             raise ValueError(
                 'Missing required attribute {!r}'.format(self._name))
@@ -112,8 +115,10 @@ class Encoder(object):
 
         """
         encoded = {}
+        type_ = type(self)
         for attribute_name in self._tracked_attributes:
-            value = getattr(self, attribute_name)
+            descriptor = getattr(type_, attribute_name)
+            value = descriptor.get_value(self)
             if value is NoValue:
                 continue
             encoded[attribute_name] = value
