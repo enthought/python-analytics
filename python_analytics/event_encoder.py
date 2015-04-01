@@ -111,7 +111,7 @@ class Encoder(object):
 
     def to_dict(self):
         """Dump the object value as a dictionary. This can be used in
-        reonstructing a new object.
+        reconstructing a new object.
 
         """
         encoded = {}
