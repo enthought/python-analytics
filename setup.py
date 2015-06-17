@@ -74,7 +74,7 @@ if not is_released:
                               "python_analytics/_version.py and the build "
                               "directory before building.")
         import re
-        match = re.match(r'.*?\.dev(?P<dev_num>\d+)\+.*', full_v)
+        match = re.match(r'.*?\.dev(?P<dev_num>\d+)$', full_v)
         if match is None:
             dev_num = '0'
         else:
